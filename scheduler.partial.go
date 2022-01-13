@@ -62,3 +62,8 @@ func Scheduled(j interface{}) bool {
 func NextRun() (job *job.Job, time time.Time) {
 	return defaultScheduler.NextRun()
 }
+
+// Jobs returns the list of job from the defaultScheduler
+func Jobs() []*job.Job {
+	return defaultScheduler.Jobs()
+}

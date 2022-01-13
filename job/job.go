@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	locker jobLocker
+	Locker jobLocker
 )
 
 type jobLocker interface {
@@ -53,12 +53,12 @@ func NewJob(interval uint64) *Job {
 // Run the job and reschedule it
 func (j *Job) Run() ([]reflect.Value, error) {
 	if j.LockJob {
-		if locker == nil {
+		if Locker == nil {
 			return nil, fmt.Errorf("%v %v", schedErrors.ERROR_TRY_LOCK_JOB, j.JobFunction)
 		}
 
 		hashedKey := helper.GetFunctionHashedKey(j.JobFunction)
-		if _, err := locker.Lock(hashedKey); err != nil {
+		if _, err := Locker.Lock(hashedKey); err != nil {
 			return nil, fmt.Errorf("%v %v", schedErrors.ERROR_TRY_LOCK_JOB, j.JobFunction)
 		}
 
@@ -67,7 +67,7 @@ func (j *Job) Run() ([]reflect.Value, error) {
 			if err != nil {
 
 			}
-		}(locker, hashedKey)
+		}(Locker, hashedKey)
 	}
 	result, err := helper.CallJobFuncWithParams(j.Functions[j.JobFunction], j.FuncParams[j.JobFunction])
 	if err != nil {

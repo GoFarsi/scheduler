@@ -85,3 +85,8 @@ func (j *Job) MustInterval(i uint64) error {
 	}
 	return nil
 }
+
+// SetLocker sets a locker implementation
+func SetLocker(l jobLocker) {
+	Locker = l
+}

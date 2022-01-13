@@ -62,12 +62,7 @@ func (j *Job) Run() ([]reflect.Value, error) {
 			return nil, fmt.Errorf("%v %v", schedErrors.ERROR_TRY_LOCK_JOB, j.JobFunction)
 		}
 
-		defer func(locker jobLocker, s string) {
-			err := locker.Unlock(s)
-			if err != nil {
-
-			}
-		}(Locker, hashedKey)
+		defer Locker.Unlock(hashedKey)
 	}
 	result, err := helper.CallJobFuncWithParams(j.Functions[j.JobFunction], j.FuncParams[j.JobFunction])
 	if err != nil {

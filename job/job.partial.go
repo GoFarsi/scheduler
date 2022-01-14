@@ -19,12 +19,13 @@ func (j *Job) Tag(t string, others ...string) {
 
 // UnTag removes a tag from a job
 func (j *Job) UnTag(t string) {
-	var newTags []string
+	newTags := []string{}
 	for _, tag := range j.Tags {
 		if t != tag {
 			newTags = append(newTags, tag)
 		}
 	}
+	j.Tags = newTags
 }
 
 // TagList returns the tags of a job
@@ -84,9 +85,4 @@ func (j *Job) MustInterval(i uint64) error {
 		return fmt.Errorf("interval must be %d", i)
 	}
 	return nil
-}
-
-// SetLocker sets a locker implementation
-func SetLocker(l jobLocker) {
-	Locker = l
 }

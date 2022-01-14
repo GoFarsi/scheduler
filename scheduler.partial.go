@@ -67,3 +67,8 @@ func NextRun() (job *job.Job, time time.Time) {
 func Jobs() []*job.Job {
 	return defaultScheduler.Jobs()
 }
+
+// SetLocker sets a locker implementation
+func SetLocker(l job.Locker) {
+	job.JobLocker = l
+}

@@ -157,7 +157,7 @@ func (s *Scheduler) RemoveByCondition(remove func(*job.Job) bool) {
 			return
 		}
 
-		for j := i + 1; j < s.JobSize-1; j++ {
+		for j := i + 1; j < s.JobSize; j++ {
 			s.JobList[i] = s.JobList[j]
 			i++
 		}

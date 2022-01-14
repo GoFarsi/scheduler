@@ -23,7 +23,7 @@ func taskWithParams(a int, b string) {
 func TestSecond(t *testing.T) {
 	scheduler := NewScheduler()
 	jb := scheduler.Every(1).Seconds()
-	testJobWithInterval(t, scheduler, jb, 2)
+	testJobWithInterval(t, scheduler, jb, 1)
 }
 
 func TestSeconds(t *testing.T) {
@@ -589,14 +589,14 @@ func (l *lockerMock) Unlock(key string) error {
 }
 
 func TestSetLocker(t *testing.T) {
-	if job.Locker != nil {
+	if job.JobLocker != nil {
 		t.Fail()
 		t.Log("Expected locker to not be set by default")
 	}
 
-	job.SetLocker(&lockerMock{})
+	SetLocker(&lockerMock{})
 
-	if job.Locker == nil {
+	if job.JobLocker == nil {
 		t.Fail()
 		t.Log("Expected locker to be set")
 	}
@@ -626,7 +626,7 @@ func TestLocker(t *testing.T) {
 		l.Unlock()
 	}
 
-	job.SetLocker(&lockerMock{
+	SetLocker(&lockerMock{
 		make(map[string]struct{}),
 		sync.Mutex{},
 	})

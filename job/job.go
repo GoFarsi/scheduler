@@ -11,10 +11,10 @@ import (
 )
 
 var (
-	Locker jobLocker
+	JobLocker Locker
 )
 
-type jobLocker interface {
+type Locker interface {
 	Lock(string) (bool, error)
 	Unlock(string) error
 }
@@ -53,16 +53,16 @@ func NewJob(interval uint64) *Job {
 // Run the job and reschedule it
 func (j *Job) Run() ([]reflect.Value, error) {
 	if j.LockJob {
-		if Locker == nil {
+		if JobLocker == nil {
 			return nil, fmt.Errorf("%v %v", schedErrors.ERROR_TRY_LOCK_JOB, j.JobFunction)
 		}
 
 		hashedKey := helper.GetFunctionHashedKey(j.JobFunction)
-		if _, err := Locker.Lock(hashedKey); err != nil {
+		if _, err := JobLocker.Lock(hashedKey); err != nil {
 			return nil, fmt.Errorf("%v %v", schedErrors.ERROR_TRY_LOCK_JOB, j.JobFunction)
 		}
 
-		defer Locker.Unlock(hashedKey)
+		defer JobLocker.Unlock(hashedKey)
 	}
 	result, err := helper.CallJobFuncWithParams(j.Functions[j.JobFunction], j.FuncParams[j.JobFunction])
 	if err != nil {
@@ -88,7 +88,8 @@ func (j *Job) Do(jobFunction interface{}, params ...interface{}) error {
 	j.FuncParams[funcName] = params
 	j.JobFunction = funcName
 
-	if !j.NextRun.After(time.Now().In(j.TimeLocation)) {
+	now := time.Now().In(j.TimeLocation)
+	if !j.NextRun.After(now) {
 		err := j.NextJobRun()
 		if err != nil {
 			return err
@@ -145,7 +146,7 @@ func (j *Job) NextJobRun() error {
 		j.NextRun = j.RoundToMidNight(j.LastRun)
 		dayDiff := int(j.FirstWeekDay)
 		dayDiff -= int(j.NextRun.Weekday())
-		if dayDiff < 0 {
+		if dayDiff != 0 {
 			j.NextRun = j.NextRun.Add(time.Duration(dayDiff) * 24 * time.Hour)
 		}
 		j.NextRun = j.NextRun.Add(j.AtTime)

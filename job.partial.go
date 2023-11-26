@@ -1,8 +1,8 @@
-package job
+package scheduler
 
 import (
 	"fmt"
-	"github.com/Ja7ad/Scheduler/global"
+	"github.com/Ja7ad/scheduler/types"
 	"time"
 )
 
@@ -45,7 +45,7 @@ func (j *Job) From(t *time.Time) *Job {
 }
 
 // SetJobUnit sets the JobUnit
-func (j *Job) SetJobUnit(unit global.TimeUnit) *Job {
+func (j *Job) SetJobUnit(unit types.TimeUnit) *Job {
 	j.JobUnit = unit
 	return j
 }

@@ -1,35 +1,34 @@
-package Scheduler
+package scheduler
 
 import (
-	"github.com/Ja7ad/Scheduler/global"
-	"github.com/Ja7ad/Scheduler/helper"
-	"github.com/Ja7ad/Scheduler/job"
+	"github.com/Ja7ad/scheduler/helper"
+	"github.com/Ja7ad/scheduler/types"
 	"sort"
 	"time"
 )
 
 var (
-	defaultScheduler = NewScheduler()
+	defaultScheduler = New()
 )
 
 // Scheduler is the main struct of the scheduler
 type Scheduler struct {
-	JobList  [global.MaxJobs]*job.Job // Jobs is the array of jobs
-	JobSize  int                      // JobSize is the number of jobs
-	Location *time.Location           // Location is the location of the scheduler
+	JobList  [types.MaxJobs]*Job // Jobs is the array of jobs
+	JobSize  int                 // JobSize is the number of jobs
+	Location *time.Location      // Location is the location of the scheduler
 }
 
-// NewScheduler creates a new scheduler
-func NewScheduler() *Scheduler {
+// New creates a new scheduler
+func New() *Scheduler {
 	return &Scheduler{
-		JobList:  [global.MaxJobs]*job.Job{},
+		JobList:  [types.MaxJobs]*Job{},
 		JobSize:  0,
-		Location: global.TimeZone,
+		Location: types.TimeZone,
 	}
 }
 
 // Jobs returns list of jobs from scheduler
-func (s *Scheduler) Jobs() []*job.Job {
+func (s *Scheduler) Jobs() []*Job {
 	return s.JobList[:s.JobSize]
 }
 
@@ -54,8 +53,8 @@ func (s *Scheduler) ChangeLocation(newLocation *time.Location) {
 }
 
 // GetRunnableJobs returns a list of jobs that are ready to run
-func (s *Scheduler) GetRunnableJobs() (runningJobs [global.MaxJobs]*job.Job, n int) {
-	runnableJobs := [global.MaxJobs]*job.Job{}
+func (s *Scheduler) GetRunnableJobs() (runningJobs [types.MaxJobs]*Job, n int) {
+	runnableJobs := [types.MaxJobs]*Job{}
 	n = 0
 	sort.Sort(s)
 	for i := 0; i < s.JobSize; i++ {
@@ -70,7 +69,7 @@ func (s *Scheduler) GetRunnableJobs() (runningJobs [global.MaxJobs]*job.Job, n i
 }
 
 // NextRun returns the next run time of the job at index i
-func (s *Scheduler) NextRun() (*job.Job, time.Time) {
+func (s *Scheduler) NextRun() (*Job, time.Time) {
 	if s.JobSize <= 0 {
 		return nil, time.Now()
 	}
@@ -79,8 +78,8 @@ func (s *Scheduler) NextRun() (*job.Job, time.Time) {
 }
 
 // Every schedules a new job to run every duration
-func (s *Scheduler) Every(interval uint64) *job.Job {
-	j := job.NewJob(interval).Location(s.Location)
+func (s *Scheduler) Every(interval uint64) *Job {
+	j := NewJob(interval).Location(s.Location)
 	s.JobList[s.JobSize] = j
 	s.JobSize++
 	return j
@@ -116,21 +115,21 @@ func (s *Scheduler) RunAllWithDelay(d int) {
 
 // Remove job by function
 func (s *Scheduler) Remove(j interface{}) {
-	s.RemoveByCondition(func(someJob *job.Job) bool {
+	s.RemoveByCondition(func(someJob *Job) bool {
 		return someJob.JobFunction == helper.GetFunctionName(j)
 	})
 }
 
 // RemoveByRef removes specific job j by reference
-func (s *Scheduler) RemoveByRef(j *job.Job) {
-	s.RemoveByCondition(func(someJob *job.Job) bool {
+func (s *Scheduler) RemoveByRef(j *Job) {
+	s.RemoveByCondition(func(someJob *Job) bool {
 		return someJob == j
 	})
 }
 
 // RemoveByTag removes specific job j by tag
 func (s *Scheduler) RemoveByTag(t string) {
-	s.RemoveByCondition(func(someJob *job.Job) bool {
+	s.RemoveByCondition(func(someJob *Job) bool {
 		for _, a := range someJob.Tags {
 			if a == t {
 				return true
@@ -141,7 +140,7 @@ func (s *Scheduler) RemoveByTag(t string) {
 }
 
 // RemoveByCondition removes specific job j by condition
-func (s *Scheduler) RemoveByCondition(remove func(*job.Job) bool) {
+func (s *Scheduler) RemoveByCondition(remove func(*Job) bool) {
 	i := 0
 
 	// Delete jobs until no more match the criteria

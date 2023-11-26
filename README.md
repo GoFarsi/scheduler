@@ -1,11 +1,11 @@
 # Scheduler
-[![Go Reference](https://pkg.go.dev/badge/github.com/Ja7ad/Scheduler.svg)](https://pkg.go.dev/github.com/Ja7ad/Scheduler)
+[![Go Reference](https://pkg.go.dev/badge/github.com/Ja7ad/scheduler.svg)](https://pkg.go.dev/github.com/Ja7ad/scheduler)
 
-[Scheduler](https://pkg.go.dev/github.com/Ja7ad/Scheduler) package is a zero-dependency scheduling library for Go
+[Scheduler](https://pkg.go.dev/github.com/Ja7ad/scheduler) package is a zero-dependency scheduling library for Go
 
 # Install
 ```console
-go get -u github.com/Ja7ad/Scheduler
+go get -u github.com/Ja7ad/scheduler
 ```
 
 # Features
@@ -23,7 +23,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/Ja7ad/Scheduler"
+	"github.com/Ja7ad/scheduler"
 )
 
 var (

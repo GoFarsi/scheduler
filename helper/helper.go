@@ -3,7 +3,7 @@ package helper
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/Ja7ad/Scheduler/schedErrors"
+	"github.com/Ja7ad/scheduler/errs"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -27,7 +27,7 @@ func GetFunctionName(functionName interface{}) string {
 func CallJobFuncWithParams(jobFunc interface{}, params []interface{}) ([]reflect.Value, error) {
 	f := reflect.ValueOf(jobFunc)
 	if len(params) != f.Type().NumIn() {
-		return nil, schedErrors.ERROR_PARAMETER
+		return nil, errs.ERROR_PARAMETER
 	}
 	in := make([]reflect.Value, len(params))
 	for k, param := range params {
@@ -40,7 +40,7 @@ func CallJobFuncWithParams(jobFunc interface{}, params []interface{}) ([]reflect
 func TimeFormat(time string) (h, m, s int, err error) {
 	timeSplit := strings.Split(time, ":")
 	if len(timeSplit) < 2 || len(timeSplit) > 3 {
-		return 0, 0, 0, schedErrors.ERROR_TIME_FORMAT
+		return 0, 0, 0, errs.ERROR_TIME_FORMAT
 	}
 
 	if h, err = strconv.Atoi(timeSplit[0]); err != nil {
@@ -58,7 +58,7 @@ func TimeFormat(time string) (h, m, s int, err error) {
 	}
 
 	if h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59 {
-		return 0, 0, 0, schedErrors.ERROR_TIME_FORMAT
+		return 0, 0, 0, errs.ERROR_TIME_FORMAT
 	}
 
 	return h, m, s, nil

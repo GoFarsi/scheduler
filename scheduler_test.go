@@ -1,10 +1,9 @@
-package Scheduler
+package scheduler
 
 import (
 	"fmt"
-	"github.com/Ja7ad/Scheduler/global"
-	"github.com/Ja7ad/Scheduler/helper"
-	"github.com/Ja7ad/Scheduler/job"
+	"github.com/Ja7ad/scheduler/helper"
+	"github.com/Ja7ad/scheduler/types"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"sync"
@@ -21,18 +20,18 @@ func taskWithParams(a int, b string) {
 }
 
 func TestSecond(t *testing.T) {
-	scheduler := NewScheduler()
+	scheduler := New()
 	jb := scheduler.Every(1).Seconds()
 	testJobWithInterval(t, scheduler, jb, 1)
 }
 
 func TestSeconds(t *testing.T) {
-	sched := NewScheduler()
+	sched := New()
 	jb := sched.Every(2).Seconds()
 	testJobWithInterval(t, sched, jb, 2)
 }
 
-func testJobWithInterval(t *testing.T, sched *Scheduler, jb *job.Job, expectedTimeBetweenRuns int64) {
+func testJobWithInterval(t *testing.T, sched *Scheduler, jb *Job, expectedTimeBetweenRuns int64) {
 	jobDone := make(chan bool)
 	executionTimes := make([]int64, 0)
 	numberOfIterations := 2
@@ -57,7 +56,7 @@ func testJobWithInterval(t *testing.T, sched *Scheduler, jb *job.Job, expectedTi
 }
 
 func TestSafeExecution(t *testing.T) {
-	sched := NewScheduler()
+	sched := New()
 	success := false
 	var wc sync.WaitGroup
 	wc.Add(1)
@@ -80,7 +79,7 @@ func TestSafeExecutionWithPanic(t *testing.T) {
 		}
 	}()
 
-	sched := NewScheduler()
+	sched := New()
 	sched.Every(1).Second().DoJobSafely(func() {
 		log.Panic("I am panicking!")
 	})
@@ -88,7 +87,7 @@ func TestSafeExecutionWithPanic(t *testing.T) {
 }
 
 func TestScheduled(t *testing.T) {
-	n := NewScheduler()
+	n := New()
 	n.Every(1).Second().Do(task)
 	if !n.Scheduled(task) {
 		t.Fatal("Task was scheduled but function couldn't find it")
@@ -96,7 +95,7 @@ func TestScheduled(t *testing.T) {
 }
 
 func TestScheduler_Weekdays(t *testing.T) {
-	scheduler := NewScheduler()
+	scheduler := New()
 
 	job1 := scheduler.Every(1).Monday().At("23:59")
 	job2 := scheduler.Every(1).Wednesday().At("23:59")
@@ -108,7 +107,7 @@ func TestScheduler_Weekdays(t *testing.T) {
 }
 
 func TestScheduler_WeekdaysTodayAfter(t *testing.T) {
-	scheduler := NewScheduler()
+	scheduler := New()
 
 	now := time.Now()
 	timeToSchedule := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()-1, 0, 0, time.Local)
@@ -126,7 +125,7 @@ func TestScheduler_WeekdaysTodayAfter(t *testing.T) {
 }
 
 func TestScheduler_JobLocsSetProperly(t *testing.T) {
-	defaultScheduledJob := job.NewJob(10)
+	defaultScheduledJob := NewJob(10)
 	assert.Equal(t, defaultScheduledJob.TimeLocation, time.Local)
 	defaultScheduledJobFromScheduler := Every(10)
 	assert.Equal(t, defaultScheduledJobFromScheduler.TimeLocation, time.Local)
@@ -137,7 +136,7 @@ func TestScheduler_JobLocsSetProperly(t *testing.T) {
 	}
 
 	ChangeTimeLocation(laLocation)
-	modifiedGlobalLocJob := job.NewJob(10)
+	modifiedGlobalLocJob := NewJob(10)
 	assert.Equal(t, modifiedGlobalLocJob.TimeLocation, laLocation)
 	modifiedGlobalLocJobFromScheduler := Every(10)
 	assert.Equal(t, modifiedGlobalLocJobFromScheduler.TimeLocation, laLocation)
@@ -147,7 +146,7 @@ func TestScheduler_JobLocsSetProperly(t *testing.T) {
 		t.Fatalf("unable to load America/Chicago time location")
 	}
 
-	scheduler := NewScheduler()
+	scheduler := New()
 	scheduler.ChangeLocation(chiLocation)
 	modifiedGlobalLocJobFromScheduler = scheduler.Every(10)
 	assert.Equal(t, modifiedGlobalLocJobFromScheduler.TimeLocation, chiLocation)
@@ -162,7 +161,7 @@ func TestScheduleNextRunLoc(t *testing.T) {
 		t.Fatalf("unable to load America/Los_Angeles time location")
 	}
 
-	sched := NewScheduler()
+	sched := New()
 	sched.ChangeLocation(time.UTC)
 
 	job := sched.Every(1).Day().At("20:44")
@@ -181,7 +180,7 @@ func TestScheduleNextRunLoc(t *testing.T) {
 func TestScheduleNextRunFromNow(t *testing.T) {
 	now := time.Now()
 
-	sched := NewScheduler()
+	sched := New()
 	sched.ChangeLocation(time.UTC)
 
 	job := sched.Every(1).Hour().From(helper.NextTick())
@@ -198,7 +197,7 @@ func TestScheduleNextRunFromNow(t *testing.T) {
 // This is to ensure that if you schedule a job for today's weekday, and the time hasn't yet passed, the next run time
 // will be scheduled for today.
 func TestScheduler_WeekdaysTodayBefore(t *testing.T) {
-	scheduler := NewScheduler()
+	scheduler := New()
 
 	now := time.Now()
 	timeToSchedule := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+1, 0, 0, time.Local)
@@ -297,7 +296,7 @@ func Test_formatTime(t *testing.T) {
 }
 
 // utility function for testing the weekday functions *on* the current weekday.
-func callTodaysWeekday(job *job.Job) *job.Job {
+func callTodaysWeekday(job *Job) *Job {
 	switch time.Now().Weekday() {
 	case 0:
 		job.Sunday()
@@ -318,7 +317,7 @@ func callTodaysWeekday(job *job.Job) *job.Job {
 }
 
 func TestScheduler_Remove(t *testing.T) {
-	scheduler := NewScheduler()
+	scheduler := New()
 	scheduler.Every(1).Minute().Do(task)
 	scheduler.Every(1).Minute().Do(taskWithParams, 1, "hello")
 
@@ -334,7 +333,7 @@ func TestScheduler_Remove(t *testing.T) {
 }
 
 func TestScheduler_RemoveByRef(t *testing.T) {
-	scheduler := NewScheduler()
+	scheduler := New()
 	job1 := scheduler.Every(1).Minute()
 	job1.Do(task)
 	job2 := scheduler.Every(1).Minute()
@@ -343,12 +342,12 @@ func TestScheduler_RemoveByRef(t *testing.T) {
 	assert.Equal(t, 2, scheduler.Len(), "Incorrect number of jobs")
 
 	scheduler.RemoveByRef(job1)
-	assert.ElementsMatch(t, []*job.Job{job2}, scheduler.Jobs())
+	assert.ElementsMatch(t, []*Job{job2}, scheduler.Jobs())
 }
 
 func TestTaskAt(t *testing.T) {
 	// Create new scheduler to have clean test env
-	s := NewScheduler()
+	s := New()
 
 	// Schedule to run in next minute
 	now := time.Now()
@@ -362,7 +361,7 @@ func TestTaskAt(t *testing.T) {
 	})
 
 	// Expected start time
-	expectedStartTime := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Add(time.Minute).Minute(), 0, 0, global.TimeZone)
+	expectedStartTime := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Add(time.Minute).Minute(), 0, 0, types.TimeZone)
 	nextRun := dayJob.NextScheduledTime()
 	assert.Equal(t, expectedStartTime, nextRun)
 
@@ -379,7 +378,7 @@ func TestTaskAt(t *testing.T) {
 
 func TestTaskAtFuture(t *testing.T) {
 	// Create new scheduler to have clean test env
-	s := NewScheduler()
+	s := New()
 
 	now := time.Now()
 
@@ -394,7 +393,7 @@ func TestTaskAtFuture(t *testing.T) {
 	})
 
 	// Check first run
-	expectedStartTime := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Add(time.Minute).Minute(), 0, 0, global.TimeZone)
+	expectedStartTime := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Add(time.Minute).Minute(), 0, 0, types.TimeZone)
 	nextRun := dayJob.NextScheduledTime()
 	assert.Equal(t, expectedStartTime, nextRun)
 
@@ -410,28 +409,28 @@ func TestDaily(t *testing.T) {
 	now := time.Now()
 
 	// Create new scheduler to have clean test env
-	s := NewScheduler()
+	s := New()
 
 	// schedule next run 1 day
 	dayJob := s.Every(1).Day()
 	dayJob.NextJobRun()
 	tomorrow := now.AddDate(0, 0, 1)
-	expectedTime := time.Date(tomorrow.Year(), tomorrow.Month(), tomorrow.Day(), 0, 0, 0, 0, global.TimeZone)
+	expectedTime := time.Date(tomorrow.Year(), tomorrow.Month(), tomorrow.Day(), 0, 0, 0, 0, types.TimeZone)
 	assert.Equal(t, expectedTime, dayJob.NextRun)
 
 	// schedule next run 2 days
 	dayJob = s.Every(2).Days()
 	dayJob.NextJobRun()
 	twoDaysFromNow := now.AddDate(0, 0, 2)
-	expectedTime = time.Date(twoDaysFromNow.Year(), twoDaysFromNow.Month(), twoDaysFromNow.Day(), 0, 0, 0, 0, global.TimeZone)
+	expectedTime = time.Date(twoDaysFromNow.Year(), twoDaysFromNow.Month(), twoDaysFromNow.Day(), 0, 0, 0, 0, types.TimeZone)
 	assert.Equal(t, expectedTime, dayJob.NextRun)
 
 	// Job running longer than next schedule 1day 2 hours
 	dayJob = s.Every(1).Day()
 	twoHoursFromNow := now.Add(2 * time.Hour)
-	dayJob.LastRun = time.Date(twoHoursFromNow.Year(), twoHoursFromNow.Month(), twoHoursFromNow.Day(), twoHoursFromNow.Hour(), 0, 0, 0, global.TimeZone)
+	dayJob.LastRun = time.Date(twoHoursFromNow.Year(), twoHoursFromNow.Month(), twoHoursFromNow.Day(), twoHoursFromNow.Hour(), 0, 0, 0, types.TimeZone)
 	dayJob.NextJobRun()
-	expectedTime = time.Date(twoHoursFromNow.Year(), twoHoursFromNow.Month(), twoHoursFromNow.AddDate(0, 0, 1).Day(), 0, 0, 0, 0, global.TimeZone)
+	expectedTime = time.Date(twoHoursFromNow.Year(), twoHoursFromNow.Month(), twoHoursFromNow.AddDate(0, 0, 1).Day(), 0, 0, 0, 0, types.TimeZone)
 	assert.Equal(t, expectedTime, dayJob.NextRun)
 
 	// At() 2 hours before now
@@ -442,7 +441,7 @@ func TestDaily(t *testing.T) {
 
 	expectedTime = time.Date(twoHoursBefore.Year(), twoHoursBefore.Month(),
 		twoHoursBefore.AddDate(0, 0, 1).Day(),
-		twoHoursBefore.Hour(), twoHoursBefore.Minute(), 0, 0, global.TimeZone)
+		twoHoursBefore.Hour(), twoHoursBefore.Minute(), 0, 0, types.TimeZone)
 
 	assert.Equal(t, expectedTime, dayJob.NextRun)
 }
@@ -451,10 +450,10 @@ func TestWeekdayAfterToday(t *testing.T) {
 	now := time.Now()
 
 	// Create new scheduler to have clean test env
-	s := NewScheduler()
+	s := New()
 
 	// Schedule job at next week day
-	var weekJob *job.Job
+	var weekJob *Job
 	switch now.Weekday() {
 	case time.Monday:
 		weekJob = s.Every(1).Tuesday()
@@ -474,14 +473,14 @@ func TestWeekdayAfterToday(t *testing.T) {
 
 	// First run
 	weekJob.NextJobRun()
-	exp := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, global.TimeZone)
+	exp := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, types.TimeZone)
 	assert.Equal(t, exp, weekJob.NextRun)
 
 	// Simulate job run 7 days before
 	weekJob.LastRun = weekJob.NextRun.AddDate(0, 0, -7)
 	// Next run
 	weekJob.NextJobRun()
-	exp = time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, global.TimeZone)
+	exp = time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, types.TimeZone)
 	assert.Equal(t, exp, weekJob.NextRun)
 }
 
@@ -489,10 +488,10 @@ func TestWeekdayBeforeToday(t *testing.T) {
 	now := time.Now()
 
 	// Create new scheduler to have clean test env
-	s := NewScheduler()
+	s := New()
 
 	// Schedule job at day before
-	var weekJob *job.Job
+	var weekJob *Job
 	switch now.Weekday() {
 	case time.Monday:
 		weekJob = s.Every(1).Sunday()
@@ -513,14 +512,14 @@ func TestWeekdayBeforeToday(t *testing.T) {
 	weekJob.NextJobRun()
 	sixDaysFromNow := now.AddDate(0, 0, 6)
 
-	exp := time.Date(sixDaysFromNow.Year(), sixDaysFromNow.Month(), sixDaysFromNow.Day(), 0, 0, 0, 0, global.TimeZone)
+	exp := time.Date(sixDaysFromNow.Year(), sixDaysFromNow.Month(), sixDaysFromNow.Day(), 0, 0, 0, 0, types.TimeZone)
 	assert.Equal(t, exp, weekJob.NextRun)
 
 	// Simulate job run 7 days before
 	weekJob.LastRun = weekJob.NextRun.AddDate(0, 0, -7)
 	// Next run
 	weekJob.NextJobRun()
-	exp = time.Date(sixDaysFromNow.Year(), sixDaysFromNow.Month(), sixDaysFromNow.Day(), 0, 0, 0, 0, global.TimeZone)
+	exp = time.Date(sixDaysFromNow.Year(), sixDaysFromNow.Month(), sixDaysFromNow.Day(), 0, 0, 0, 0, types.TimeZone)
 	assert.Equal(t, exp, weekJob.NextRun)
 }
 
@@ -532,10 +531,10 @@ func TestWeekdayAt(t *testing.T) {
 	startAt := fmt.Sprintf("%02d:%02d", hour, minute)
 
 	// Create new scheduler to have clean test env
-	s := NewScheduler()
+	s := New()
 
 	// Schedule job at next week day
-	var weekJob *job.Job
+	var weekJob *Job
 	switch now.Weekday() {
 	case time.Monday:
 		weekJob = s.Every(1).Tuesday().At(startAt)
@@ -555,14 +554,14 @@ func TestWeekdayAt(t *testing.T) {
 
 	// First run
 	weekJob.NextJobRun()
-	exp := time.Date(now.Year(), now.Month(), now.AddDate(0, 0, 1).Day(), hour, minute, 0, 0, global.TimeZone)
+	exp := time.Date(now.Year(), now.Month(), now.AddDate(0, 0, 1).Day(), hour, minute, 0, 0, types.TimeZone)
 	assert.Equal(t, exp, weekJob.NextRun)
 
 	// Simulate job run 7 days before
 	weekJob.LastRun = weekJob.NextRun.AddDate(0, 0, -7)
 	// Next run
 	weekJob.NextJobRun()
-	exp = time.Date(now.Year(), now.Month(), now.AddDate(0, 0, 1).Day(), hour, minute, 0, 0, global.TimeZone)
+	exp = time.Date(now.Year(), now.Month(), now.AddDate(0, 0, 1).Day(), hour, minute, 0, 0, types.TimeZone)
 	assert.Equal(t, exp, weekJob.NextRun)
 }
 
@@ -589,14 +588,14 @@ func (l *lockerMock) Unlock(key string) error {
 }
 
 func TestSetLocker(t *testing.T) {
-	if job.JobLocker != nil {
+	if jobLocker != nil {
 		t.Fail()
 		t.Log("Expected locker to not be set by default")
 	}
 
 	SetLocker(&lockerMock{})
 
-	if job.JobLocker == nil {
+	if jobLocker == nil {
 		t.Fail()
 		t.Log("Expected locker to be set")
 	}
@@ -632,13 +631,13 @@ func TestLocker(t *testing.T) {
 	})
 
 	for i := 0; i < 5; i++ {
-		s1 := NewScheduler()
+		s1 := New()
 		s1.Every(1).Seconds().Lock().Do(task, "A", i)
 
-		s2 := NewScheduler()
+		s2 := New()
 		s2.Every(1).Seconds().Lock().Do(task, "B", i)
 
-		s3 := NewScheduler()
+		s3 := New()
 		s3.Every(1).Seconds().Lock().Do(task, "C", i)
 
 		stop1 := s1.Start()
@@ -666,7 +665,7 @@ func TestLocker(t *testing.T) {
 }
 
 func TestGetAllJobs(t *testing.T) {
-	defaultScheduler = NewScheduler()
+	defaultScheduler = New()
 	Every(1).Minute().Do(task)
 	Every(2).Minutes().Do(task)
 	Every(3).Minutes().Do(task)

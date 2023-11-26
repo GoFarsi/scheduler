@@ -1,14 +1,13 @@
-package Scheduler
+package scheduler
 
 import (
-	"github.com/Ja7ad/Scheduler/global"
-	"github.com/Ja7ad/Scheduler/helper"
-	"github.com/Ja7ad/Scheduler/job"
+	"github.com/Ja7ad/scheduler/helper"
+	"github.com/Ja7ad/scheduler/types"
 	"time"
 )
 
 // Every schedules a new periodic job running in specific interval
-func Every(interval uint64) *job.Job {
+func Every(interval uint64) *Job {
 	return defaultScheduler.Every(interval)
 }
 
@@ -44,7 +43,7 @@ func Remove(j interface{}) {
 
 // ChangeTimeLocation change the location of a time
 func ChangeTimeLocation(location *time.Location) {
-	global.TimeZone = location
+	types.TimeZone = location
 	defaultScheduler.ChangeLocation(location)
 }
 
@@ -59,16 +58,16 @@ func Scheduled(j interface{}) bool {
 }
 
 // NextRun gets the next running time
-func NextRun() (job *job.Job, time time.Time) {
+func NextRun() (job *Job, time time.Time) {
 	return defaultScheduler.NextRun()
 }
 
 // Jobs returns the list of job from the defaultScheduler
-func Jobs() []*job.Job {
+func Jobs() []*Job {
 	return defaultScheduler.Jobs()
 }
 
 // SetLocker sets a locker implementation
-func SetLocker(l job.Locker) {
-	job.JobLocker = l
+func SetLocker(l Locker) {
+	jobLocker = l
 }

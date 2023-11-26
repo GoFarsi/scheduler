@@ -1,17 +1,17 @@
-package job
+package scheduler
 
 import (
 	"fmt"
-	"github.com/Ja7ad/Scheduler/global"
-	"github.com/Ja7ad/Scheduler/helper"
-	"github.com/Ja7ad/Scheduler/schedErrors"
+	"github.com/Ja7ad/scheduler/errs"
+	"github.com/Ja7ad/scheduler/helper"
+	"github.com/Ja7ad/scheduler/types"
 	"log"
 	"reflect"
 	"time"
 )
 
 var (
-	JobLocker Locker
+	jobLocker Locker
 )
 
 type Locker interface {
@@ -25,7 +25,7 @@ type Job struct {
 	Functions    map[string]interface{}
 	FuncParams   map[string][]interface{}
 	Interval     uint64
-	JobUnit      global.TimeUnit
+	JobUnit      types.TimeUnit
 	Tags         []string
 	AtTime       time.Duration
 	TimeLocation *time.Location
@@ -40,7 +40,7 @@ type Job struct {
 func NewJob(interval uint64) *Job {
 	return &Job{
 		Interval:     interval,
-		TimeLocation: global.TimeZone,
+		TimeLocation: types.TimeZone,
 		LastRun:      time.Unix(0, 0),
 		NextRun:      time.Unix(0, 0),
 		FirstWeekDay: time.Sunday,
@@ -53,16 +53,16 @@ func NewJob(interval uint64) *Job {
 // Run the job and reschedule it
 func (j *Job) Run() ([]reflect.Value, error) {
 	if j.LockJob {
-		if JobLocker == nil {
-			return nil, fmt.Errorf("%v %v", schedErrors.ERROR_TRY_LOCK_JOB, j.JobFunction)
+		if jobLocker == nil {
+			return nil, fmt.Errorf("%v %v", errs.ERROR_TRY_LOCK_JOB, j.JobFunction)
 		}
 
 		hashedKey := helper.GetFunctionHashedKey(j.JobFunction)
-		if _, err := JobLocker.Lock(hashedKey); err != nil {
-			return nil, fmt.Errorf("%v %v", schedErrors.ERROR_TRY_LOCK_JOB, j.JobFunction)
+		if _, err := jobLocker.Lock(hashedKey); err != nil {
+			return nil, fmt.Errorf("%v %v", errs.ERROR_TRY_LOCK_JOB, j.JobFunction)
 		}
 
-		defer JobLocker.Unlock(hashedKey)
+		defer jobLocker.Unlock(hashedKey)
 	}
 	result, err := helper.CallJobFuncWithParams(j.Functions[j.JobFunction], j.FuncParams[j.JobFunction])
 	if err != nil {
@@ -80,7 +80,7 @@ func (j *Job) Do(jobFunction interface{}, params ...interface{}) error {
 
 	jobType := reflect.TypeOf(jobFunction)
 	if jobType.Kind() != reflect.Func {
-		return schedErrors.ERROR_NOT_A_FUNCTION
+		return errs.ERROR_NOT_A_FUNCTION
 	}
 
 	funcName := helper.GetFunctionName(jobFunction)
@@ -103,7 +103,7 @@ func (j *Job) DoJobSafely(jobFunction interface{}, params ...interface{}) error 
 	recoveryFunction := func() {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("Internal Panic: %v", r)
+				log.Printf("internal panic happen: %v", r)
 			}
 		}()
 		_, _ = helper.CallJobFuncWithParams(jobFunction, params)
@@ -112,12 +112,13 @@ func (j *Job) DoJobSafely(jobFunction interface{}, params ...interface{}) error 
 }
 
 // At schedules the job to run at the given time
+//
 //	s.Every(1).Day().At("20:30:01").Do(task)
 //	s.Every(1).Monday().At("20:30:01").Do(task)
 func (j *Job) At(t string) *Job {
 	h, m, s, err := helper.TimeFormat(t)
 	if err != nil {
-		j.JobError = schedErrors.ERROR_TIME_FORMAT
+		j.JobError = errs.ERROR_TIME_FORMAT
 		return j
 	}
 	j.AtTime = time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(s)*time.Second
@@ -137,12 +138,12 @@ func (j *Job) NextJobRun() error {
 	}
 
 	switch j.JobUnit {
-	case global.Seconds, global.Minutes, global.Hours:
+	case types.Seconds, types.Minutes, types.Hours:
 		j.NextRun = j.LastRun.Add(periodDuration)
-	case global.Days:
+	case types.Days:
 		j.NextRun = j.RoundToMidNight(j.LastRun)
 		j.NextRun = j.NextRun.Add(j.AtTime)
-	case global.Weeks:
+	case types.Weeks:
 		j.NextRun = j.RoundToMidNight(j.LastRun)
 		dayDiff := int(j.FirstWeekDay)
 		dayDiff -= int(j.NextRun.Weekday())
@@ -150,7 +151,6 @@ func (j *Job) NextJobRun() error {
 			j.NextRun = j.NextRun.Add(time.Duration(dayDiff) * 24 * time.Hour)
 		}
 		j.NextRun = j.NextRun.Add(j.AtTime)
-		// TODO: Add support for months
 	}
 
 	// next possible schedule advance
@@ -166,20 +166,20 @@ func (j *Job) PeriodDuration() (time.Duration, error) {
 	var periodDuration time.Duration
 
 	switch j.JobUnit {
-	case global.Seconds:
+	case types.Seconds:
 		periodDuration = interval * time.Second
-	case global.Minutes:
+	case types.Minutes:
 		periodDuration = interval * time.Minute
-	case global.Hours:
+	case types.Hours:
 		periodDuration = interval * time.Hour
-	case global.Days:
+	case types.Days:
 		periodDuration = interval * time.Hour * 24
-	case global.Weeks:
+	case types.Weeks:
 		periodDuration = interval * time.Hour * 24 * 7
-	case global.Months:
+	case types.Months:
 		periodDuration = interval * time.Hour * 24 * 30
 	default:
-		return 0, schedErrors.ERROR_JOB_PREIOD
+		return 0, errs.ERROR_JOB_PREIOD
 	}
 	return periodDuration, nil
 }

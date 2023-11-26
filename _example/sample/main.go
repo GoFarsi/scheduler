@@ -2,19 +2,17 @@ package main
 
 import (
 	"fmt"
-	"github.com/Ja7ad/Scheduler"
-)
-
-var (
-	Sched = Scheduler.NewScheduler()
+	"github.com/Ja7ad/scheduler"
 )
 
 func main() {
-	if err := Sched.Every(5).Second().Do(Greeting); err != nil {
+	sched := scheduler.New()
+
+	if err := sched.Every(5).Second().Do(Greeting); err != nil {
 		panic(err)
 	}
 
-	<-Sched.Start()
+	<-sched.Start()
 }
 
 func Greeting() {

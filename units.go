@@ -1,38 +1,38 @@
-package job
+package scheduler
 
 import (
-	"github.com/Ja7ad/Scheduler/global"
+	"github.com/Ja7ad/scheduler/types"
 	"time"
 )
 
 // Seconds set the unit with seconds
 func (j *Job) Seconds() *Job {
-	return j.SetJobUnit(global.Seconds)
+	return j.SetJobUnit(types.Seconds)
 }
 
 // Minutes set the unit with minutes
 func (j *Job) Minutes() *Job {
-	return j.SetJobUnit(global.Minutes)
+	return j.SetJobUnit(types.Minutes)
 }
 
 // Hours set the unit with hours
 func (j *Job) Hours() *Job {
-	return j.SetJobUnit(global.Hours)
+	return j.SetJobUnit(types.Hours)
 }
 
 // Days set the unit with days
 func (j *Job) Days() *Job {
-	return j.SetJobUnit(global.Days)
+	return j.SetJobUnit(types.Days)
 }
 
 // Weeks set the unit with weeks
 func (j *Job) Weeks() *Job {
-	return j.SetJobUnit(global.Weeks)
+	return j.SetJobUnit(types.Weeks)
 }
 
 // Months set the unit with months
 func (j *Job) Months() *Job {
-	return j.SetJobUnit(global.Months)
+	return j.SetJobUnit(types.Months)
 }
 
 // Second sets the unit with second

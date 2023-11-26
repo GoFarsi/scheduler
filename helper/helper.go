@@ -3,7 +3,7 @@ package helper
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/Ja7ad/scheduler/errs"
+	"github.com/GoFarsi/scheduler/errs"
 	"reflect"
 	"runtime"
 	"strconv"

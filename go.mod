@@ -1,4 +1,4 @@
-module github.com/Ja7ad/scheduler
+module github.com/GoFarsi/scheduler
 
 go 1.17
 

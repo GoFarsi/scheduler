@@ -2,9 +2,9 @@ package scheduler
 
 import (
 	"fmt"
-	"github.com/Ja7ad/scheduler/errs"
-	"github.com/Ja7ad/scheduler/helper"
-	"github.com/Ja7ad/scheduler/types"
+	"github.com/GoFarsi/scheduler/errs"
+	"github.com/GoFarsi/scheduler/helper"
+	"github.com/GoFarsi/scheduler/types"
 	"log"
 	"reflect"
 	"time"

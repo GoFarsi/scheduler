@@ -1,7 +1,7 @@
 package scheduler
 
 import (
-	"github.com/Ja7ad/scheduler/types"
+	"github.com/GoFarsi/scheduler/types"
 	"time"
 )
 

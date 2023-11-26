@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/Ja7ad/scheduler"
+	"github.com/GoFarsi/scheduler"
 )
 
 func main() {
